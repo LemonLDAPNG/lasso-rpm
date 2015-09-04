@@ -14,8 +14,8 @@
 
 Summary: Liberty Alliance Single Sign On
 Name: lasso
-Version: 2.4.1
-Release: 3%{?dist}
+Version: 2.5.0
+Release: 1%{?dist}
 License: GPLv2+
 Group: System Environment/Libraries
 Source: http://dev.entrouvert.org/lasso/lasso-%{version}.tar.gz
@@ -25,6 +25,7 @@ BuildRequires: cyrus-sasl-devel
 BuildRequires: gtk-doc, libtool-ltdl-devel
 BuildRequires: glib2-devel, swig
 BuildRequires: libxml2-devel, xmlsec1-devel, openssl-devel, xmlsec1-openssl-devel
+BuildRequires: python-six
 Url: http://lasso.entrouvert.org/
 
 %description
@@ -210,6 +211,9 @@ rm -fr %{buildroot}%{_defaultdocdir}/%{name}
 %endif
 
 %changelog
+* Fri Sep 04 2015 Clement Oudot <clem.oudot@gmail.com> - 2.5.0-1
+- New upstream relase 2.5.0
+
 * Mon May 04 2015 Clement Oudot <clem.oudot@gmail.com> - 2.4.1-3
 - Fix tests for Perl bindings
 
