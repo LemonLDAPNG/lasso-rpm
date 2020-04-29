@@ -49,6 +49,7 @@ Summary: Liberty Alliance Single Sign On (lasso) Perl bindings
 Group: Development/Libraries
 BuildRequires: perl(ExtUtils::MakeMaker)
 BuildRequires: perl(Test::More)
+BuildRequires: perl(Error)
 Requires: perl(:MODULE_COMPAT_%(eval "`%{__perl} -V:version`"; echo $version))
 Requires: %{name}%{?_isa} = %{version}-%{release}
 
