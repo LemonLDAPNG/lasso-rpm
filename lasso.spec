@@ -26,7 +26,6 @@ BuildRequires: cyrus-sasl-devel
 BuildRequires: gtk-doc, libtool-ltdl-devel
 BuildRequires: glib2-devel, swig
 BuildRequires: libxml2-devel, xmlsec1-devel, openssl-devel, xmlsec1-openssl-devel
-BuildRequires: python-six
 Url: http://lasso.entrouvert.org/
 
 %description
@@ -92,8 +91,14 @@ PHP language bindings for the lasso (Liberty Alliance Single Sign On) library.
 %package python
 Summary: Liberty Alliance Single Sign On (lasso) Python bindings
 Group: Development/Libraries
+%if 0%{?rhel} == 8
+BuildRequires: python3-devel
+BuildRequires: python3-lxml, python3-six
+%define __python /usr/bin/python3
+%else
 BuildRequires: python2-devel
-BuildRequires: python-lxml
+BuildRequires: python-lxml, python-six
+%endif
 Requires: python
 Requires: %{name}%{?_isa} = %{version}-%{release}
 
@@ -218,6 +223,9 @@ rm -fr %{buildroot}%{_defaultdocdir}/%{name}
 %defattr(-,root,root)
 %{python_sitearch}/lasso.py*
 %{python_sitearch}/_lasso.so
+%if 0%{?rhel} == 8
+%{python_sitearch}/__pycache__/*
+%endif
 %endif
 
 %changelog
