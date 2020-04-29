@@ -19,6 +19,7 @@ Release: 1%{?dist}
 License: GPLv2+
 Group: System Environment/Libraries
 Source: http://dev.entrouvert.org/lasso/lasso-%{version}.tar.gz
+Patch0: lasso-php.patch
 %if %{with_wsf}
 BuildRequires: cyrus-sasl-devel
 %endif
@@ -103,6 +104,7 @@ library.
 
 %prep
 %setup -q -n %{name}-%{version}
+%patch0 -p1
 
 %build
 ./autogen.sh
@@ -117,10 +119,17 @@ library.
            --disable-perl \
 %endif
 %if %{with_php}
+%if 0%{?rhel} > 7
+           --enable-php7=yes \
+           --with-php7-config=/usr/bin/php-config \
+           --with-php7-config-dir=%{php_inidir} \
+%else
            --enable-php5=yes \
            --with-php5-config-dir=%{php_inidir} \
+%endif
 %else
            --enable-php5=no \
+           --enable-php7=no \
 %endif
 %if %{with_wsf}
            --enable-wsf \
