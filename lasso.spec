@@ -14,12 +14,11 @@
 
 Summary: Liberty Alliance Single Sign On
 Name: lasso
-Version: 2.6.1
+Version: 2.7.0
 Release: 1%{?dist}
 License: GPLv2+
 Group: System Environment/Libraries
 Source: http://dev.entrouvert.org/lasso/lasso-%{version}.tar.gz
-Patch0: lasso-php.patch
 %if %{with_wsf}
 BuildRequires: cyrus-sasl-devel
 %endif
@@ -109,7 +108,6 @@ library.
 
 %prep
 %setup -q -n %{name}-%{version}
-%patch0 -p1
 
 %build
 ./autogen.sh
@@ -229,6 +227,9 @@ rm -fr %{buildroot}%{_defaultdocdir}/%{name}
 %endif
 
 %changelog
+* Tue Jun 01 2021 Clement Oudot <clem.oudot@gmail.com> - 2.7.0-1
+- New upstream relase 2.7.0
+
 * Mon Apr 27 2020 Clement Oudot <clem.oudot@gmail.com> - 2.6.1-1
 - New upstream relase 2.6.1
 
