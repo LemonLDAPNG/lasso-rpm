@@ -1,7 +1,7 @@
 %global with_java 0
 %global with_php 0
 %global with_perl 1
-%global with_python 1
+%global with_python 0
 %global with_wsf 0
 
 %if %{with_php}
