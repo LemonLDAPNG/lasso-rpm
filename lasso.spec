@@ -14,7 +14,7 @@
 
 Summary: Liberty Alliance Single Sign On
 Name: lasso
-Version: 2.7.0
+Version: 2.8.0
 Release: 1%{?dist}
 License: GPLv2+
 Group: System Environment/Libraries
@@ -227,6 +227,9 @@ rm -fr %{buildroot}%{_defaultdocdir}/%{name}
 %endif
 
 %changelog
+* Fri Dec 02 2022 Clement Oudot <clem.oudot@gmail.com> - 2.8.0-1
+- New upstream relase 2.8.0
+
 * Tue Jun 01 2021 Clement Oudot <clem.oudot@gmail.com> - 2.7.0-1
 - New upstream relase 2.7.0
 
