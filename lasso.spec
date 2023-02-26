@@ -112,6 +112,10 @@ library.
 %build
 ./autogen.sh
 %configure --prefix=%{_prefix} \
+%if 0%{?rhel} > 8
+           --with-min-hash-algo=sha256 \
+           --with-default-sign-algo=rsa-sha256 \
+%endif
 %if !%{with_java}
            --disable-java \
 %endif
