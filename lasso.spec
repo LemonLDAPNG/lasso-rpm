@@ -15,7 +15,7 @@
 Summary: Liberty Alliance Single Sign On
 Name: lasso
 Version: 2.8.0
-Release: 1%{?dist}
+Release: 2%{?dist}
 License: GPLv2+
 Group: System Environment/Libraries
 Source: http://dev.entrouvert.org/lasso/lasso-%{version}.tar.gz
@@ -231,6 +231,9 @@ rm -fr %{buildroot}%{_defaultdocdir}/%{name}
 %endif
 
 %changelog
+* Mon Feb 27 2023 Clement Oudot <clem.oudot@gmail.com> - 2.8.0-2
+- Fix package for RHEL9 (#1)
+
 * Fri Dec 02 2022 Clement Oudot <clem.oudot@gmail.com> - 2.8.0-1
 - New upstream relase 2.8.0
 
