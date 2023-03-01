@@ -24,7 +24,13 @@ BuildRequires: cyrus-sasl-devel
 %endif
 BuildRequires: gtk-doc, libtool-ltdl-devel
 BuildRequires: glib2-devel, swig
-BuildRequires: libxml2-devel, xmlsec1-devel, openssl-devel, xmlsec1-openssl-devel
+BuildRequires: libxml2-devel, xmlsec1-devel, xmlsec1-openssl-devel
+%if  0%{?rhel} > 7
+BuildRequires: openssl-devel
+%else
+BuildRequires: openssl11-devel
+%endif
+
 Url: http://lasso.entrouvert.org/
 
 %description
@@ -111,6 +117,10 @@ library.
 
 %build
 ./autogen.sh
+%if 0%{?rhel} < 8
+export CPPFLAGS="${CPPFLAGS} -I/usr/include/openssl11"
+export LDFLAGS="${LDFLAGS} -L/usr/%{_lib}/openssl11"
+%endif
 %configure --prefix=%{_prefix} \
 %if 0%{?rhel} > 8
            --with-min-hash-algo=sha256 \
