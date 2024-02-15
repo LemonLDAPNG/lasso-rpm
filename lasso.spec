@@ -28,7 +28,7 @@
 %endif
 %endif
 
-%if 0%{?el7}
+%if 0%{?el7}%{?el8}%{?el9}
   %global obsolete_old_lang_subpackages 1
 %endif
 
