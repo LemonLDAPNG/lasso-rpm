@@ -5,13 +5,20 @@
 %global with_php 0
 %endif
 %global with_perl 1
-# The Lasso build system requires python, especially the binding generators
-%global with_python 1
 %global with_python2 0
 %global with_python3 0
 %global with_wsf 0
 %global obsolete_old_lang_subpackages 0
+%global default_sign_algo "rsa-sha1"
+%global min_hash_algo "sha1"
+
+%if 0%{?fedora} >= 38 || 0%{?rhel} >= 9
 %global default_sign_algo "rsa-sha256"
+%endif
+
+%if 0%{?rhel} >= 9
+%global min_hash_algo "sha256"
+%endif
 
 %if %{with_php}
 %if "%{php_version}" < "5.6"
@@ -21,18 +28,16 @@
 %endif
 %endif
 
-%if (0%{?fedora} > 0 && 0%{?fedora} <= 29) || (0%{?rhel} > 0 && 0%{?rhel} <= 7)
+%if 0%{?el7}
   %global obsolete_old_lang_subpackages 1
 %endif
 
-%if %{with_python}
-  %if (0%{?fedora} > 0 && 0%{?fedora} < 32) || (0%{?rhel} > 0 && 0%{?rhel} <= 7)
-    %global with_python2 1
-  %endif
+%if 0%{?el7}
+  %global with_python2 1
+%endif
 
-  %if 0%{?fedora} || 0%{?rhel} >= 8
-    %global with_python3 1
-  %endif
+%if 0%{?fedora} || 0%{?rhel} >= 8
+  %global with_python3 1
 %endif
 
 %global configure_args %{nil}
@@ -40,6 +45,10 @@
 
 %if %{default_sign_algo}
   %global configure_args %{configure_args} --with-default-sign-algo=%{default_sign_algo}
+%endif
+
+%if %{min_hash_algo}
+  %global configure_args %{configure_args} --with-min-hash-algo=%{min_hash_algo}
 %endif
 
 %if !%{with_java}
@@ -64,11 +73,7 @@
   %global configure_args %{configure_args} --enable-wsf --with-sasl2=%{_prefix}/sasl2
 %endif
 
-%if %{with_python}
-  %if 0%{?fedora} || 0%{?rhel} > 7
-BuildRequires: (python3-setuptools if python3 >= 3.12)
-  %endif
-%else
+%if !%{with_python2} && !%{with_python3}
   %global configure_args %{configure_args} --disable-python
 %endif
 
@@ -76,8 +81,8 @@ BuildRequires: (python3-setuptools if python3 >= 3.12)
 Summary: Liberty Alliance Single Sign On
 Name: lasso
 Version: 2.8.2
-Release: 9%{?dist}
-License: GPLv2+
+Release: 10%{?dist}
+License: GPL-2.0-or-later
 URL: https://lasso.entrouvert.org/
 Source: https://dev.entrouvert.org/lasso/lasso-%{version}.tar.gz
 
@@ -88,12 +93,23 @@ Patch3: lasso-libxml2.patch
 BuildRequires: autoconf
 BuildRequires: automake
 BuildRequires: check-devel
+BuildRequires: gcc
 BuildRequires: glib2-devel
 BuildRequires: gtk-doc
 BuildRequires: libtool
 BuildRequires: libtool-ltdl-devel
 BuildRequires: libxml2-devel
+BuildRequires: make
 BuildRequires: openssl-devel
+%if 0%{?el7}
+BuildRequires: python
+BuildRequires: python2-six
+%endif
+%if 0%{?fedora} || 0%{?rhel} >= 8
+BuildRequires: python3
+BuildRequires: python3-six
+BuildRequires: (python3-setuptools if python3 >= 3.12)
+%endif
 BuildRequires: swig
 BuildRequires: xmlsec1-devel
 BuildRequires: xmlsec1-openssl-devel
@@ -128,6 +144,7 @@ documentation for Lasso.
 Summary: Liberty Alliance Single Sign On (lasso) Perl bindings
 BuildRequires: perl-devel
 BuildRequires: perl-generators
+BuildRequires: perl-interpreter
 BuildRequires: perl(Error)
 BuildRequires: perl(ExtUtils::MakeMaker)
 BuildRequires: perl(strict)
@@ -176,14 +193,8 @@ PHP language bindings for the lasso (Liberty Alliance Single Sign On) library.
 %package -n python2-%{name}
 %{?python_provide:%python_provide python2-%{name}}
 Summary: Liberty Alliance Single Sign On (lasso) Python bindings
-BuildRequires: python2
 BuildRequires: python2-devel
-%if 0%{?rhel} && 0%{?rhel} <= 7
-BuildRequires: python-lxml
-%else
-BuildRequires: python2-lxml
-%endif
-BuildRequires: python2-six
+%{?el7:BuildRequires: python-lxml}
 Requires: python2
 Requires: %{name}%{?_isa} = %{version}-%{release}
 %if %{obsolete_old_lang_subpackages}
@@ -201,11 +212,8 @@ library.
 %package -n python3-%{name}
 %{?python_provide:%python_provide python3-%{name}}
 Summary: Liberty Alliance Single Sign On (lasso) Python bindings
-BuildRequires: python3
 BuildRequires: python3-devel
 BuildRequires: python3-lxml
-BuildRequires: python3-six
-BuildRequires: make
 Requires: python3
 Requires: %{name}%{?_isa} = %{version}-%{release}
 
@@ -215,22 +223,23 @@ library.
 %endif
 
 %prep
-%autosetup -p1
+%setup -q
+%{!?el7:%patch -P 01 -p1}
 
 # Remove any python script shebang lines (unless they refer to python3)
 sed -i -E -e '/^#![[:blank:]]*(\/usr\/bin\/env[[:blank:]]+python[^3]?\>)|(\/usr\/bin\/python[^3]?\>)/d' \
   `grep -r -l -E '^#![[:blank:]]*(/usr/bin/python[^3]?)|(/usr/bin/env[[:blank:]]+python[^3]?)' *`
 
 %build
-export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk
+%{?with_java:export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk}
 ./autogen.sh
 %if 0%{?with_python2}
   %configure %{configure_args} --with-python=%{__python2}
   pushd lasso
-  make %{?_smp_mflags} CFLAGS="%{optflags}"
+  %make_build CFLAGS="%{optflags}"
   popd
   pushd bindings/python
-  make %{?_smp_mflags} CFLAGS="%{optflags}"
+  %make_build CFLAGS="%{optflags}"
   make check CK_TIMEOUT_MULTIPLIER=5
   mkdir py2
   mv lasso.py .libs/_lasso.so py2
@@ -249,9 +258,7 @@ export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk
 make check CK_TIMEOUT_MULTIPLIER=10
 
 %install
-#install -m 755 -d %{buildroot}%{_datadir}/gtk-doc/html
-
-make install exec_prefix=%{_prefix} DESTDIR=%{buildroot}
+%make_install exec_prefix=%{_prefix}
 find %{buildroot} -type f -name '*.la' -exec rm -f {} \;
 find %{buildroot} -type f -name '*.a' -exec rm -f {} \;
 
@@ -265,13 +272,6 @@ find %{buildroot} -type f -name '*.a' -exec rm -f {} \;
 # Perl subpackage
 %if %{with_perl}
 find %{buildroot} \( -name perllocal.pod -o -name .packlist \) -exec rm -v {} \;
-
-find %{buildroot}/usr/lib*/perl5 -type f -print |
-        sed "s@^%{buildroot}@@g" > %{name}-perl-filelist
-if [ "$(cat %{name}-perl-filelist)X" = "X" ] ; then
-    echo "ERROR: EMPTY FILE LIST"
-    exit -1
-fi
 %endif
 
 # PHP subpackage
@@ -287,7 +287,7 @@ fi
 %endif
 
 # Remove bogus doc files
-rm -fr %{buildroot}%{_defaultdocdir}/%{name}
+rm -fr %{buildroot}%{_docdir}/%{name}
 
 %ldconfig_scriptlets
 
@@ -302,7 +302,9 @@ rm -fr %{buildroot}%{_defaultdocdir}/%{name}
 %{_includedir}/%{name}
 
 %if %{with_perl}
-%files -n perl-%{name} -f %{name}-perl-filelist
+%files -n perl-%{name}
+%{perl_vendorarch}/Lasso.pm
+%{perl_vendorarch}/auto/Lasso/
 %endif
 
 %if %{with_java}
@@ -333,6 +335,23 @@ rm -fr %{buildroot}%{_defaultdocdir}/%{name}
 %endif
 
 %changelog
+* Mon Feb 12 2024 Xavier Bachelot <xavier@bachelot.org> - 2.8.2-10
+- Spec file cleanup:
+  - Fix changelog entry date to restore chronological order
+  - Convert License to SPDX
+  - Don't set JAVA_HOME when not building java bindings
+  - Explicitely list perl sub-package files
+  - make is always needed
+  - Simplify conditionals
+  - fix-removed-xmlsec-deprecations.patch is not suitable for EL7
+  - python interpreter is always needed to build
+  - BuildRequires gcc
+  - BuildRequires perl-interpreter for perl bindings
+  - Use %%make_build
+  - Use %%make_install
+  - Drop spurious comment
+  - Use %%_docdir instead of %%_defaultdocdir
+
 * Thu Jan 25 2024 Fedora Release Engineering <releng@fedoraproject.org> - 2.8.2-9
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_40_Mass_Rebuild
 
@@ -352,7 +371,7 @@ rm -fr %{buildroot}%{_defaultdocdir}/%{name}
 * Wed Jun 28 2023 Python Maint <python-maint@redhat.com> - 2.8.2-4
 - Rebuilt for Python 3.12
 
-* Fri Jun 09 2023 Francois Andrieu <darknao@fedoraproject.org> - 2.8.2-3
+* Tue Jun 27 2023 Francois Andrieu <darknao@fedoraproject.org> - 2.8.2-3
 - Set default signing algorithm to RSA-SHA256
 
 * Wed Jun 14 2023 Python Maint <python-maint@redhat.com> - 2.8.2-2
