@@ -152,6 +152,11 @@ BuildRequires: perl(Test::More)
 BuildRequires: perl(warnings)
 BuildRequires: perl(XSLoader)
 Requires: %{name}%{?_isa} = %{version}-%{release}
+%if %{obsolete_old_lang_subpackages}
+Provides: %{name}-perl = %{version}-%{release}
+Provides: %{name}-perl%{?_isa} = %{version}-%{release}
+Obsoletes: %{name}-perl < %{version}-%{release}
+%endif
 
 %description -n perl-%{name}
 Perl language bindings for the lasso (Liberty Alliance Single Sign On) library.
